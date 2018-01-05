@@ -143,8 +143,8 @@ class ServerConfig(config.Config):
 			self["zimbraMtaSmtpdMilters"] = "%s, %s" % (self["zimbraMtaSmtpdMilters"], milter)
 		elif self["zimbraMtaSmtpdMilters"] is None and milter is not None:
 			self["zimbraMtaSmtpdMilters"] = milter
-                elif self["zimbraMtaSmtpdMilters"] is not None and milter is None:
-                        self["zimbraMtaSmtpdMilters"] = "%s, %s" % (self["zimbraMtaSmtpdMilters"])
+		else: 
+                        self["zimbraMtaSmtpdMilters"] 
 
 		if self["zimbraMtaHeaderChecks"] is not None:
 			v = self["zimbraMtaHeaderChecks"]
