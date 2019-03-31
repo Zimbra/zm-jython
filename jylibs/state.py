@@ -273,6 +273,14 @@ class State:
 		commands.Command.resetProvisioning("server")
 		commands.Command.resetProvisioning("local")
 		self.fileCache = {}
+
+		# set thread_wait_time considering ldap_read_timeout
+		# in case a connection with ldap is established but the ldap doesn't send any response
+		ldap_read_timeout = int(self.localconfig["ldap_read_timeout"])
+		thread_wait_time = 60
+		if ldap_read_timeout >= 60000:
+			thread_wait_time = ldap_read_timeout / 1000
+
 		lc = threading.Thread(target=State.getLocalConfig,args=(self,cf),name="lc")
 		gc = threading.Thread(target=State.getGlobalConfig,args=(self,),name="gc")
 		mc = threading.Thread(target=State.getMiscConfig,args=(self,),name="mc")
@@ -286,7 +294,6 @@ class State:
 		mc.start()
 		sc.start()
 		
-		thread_wait_time = 60
 		lc.join(thread_wait_time)
 		gc.join(thread_wait_time)
 		mc.join(thread_wait_time)
