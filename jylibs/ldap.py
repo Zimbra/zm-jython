@@ -104,17 +104,21 @@ class Ldap:
 			entry = ne.next()
 			entryAttrs = entry.getAttributes()
 			origValue = entryAttrs.getAttrString(attr)
+                        attrPresent = entryAttrs.hasAttribute(attr)
 			LdapClient.closeContext(mLdapContext)
 			if origValue != v:
-				Log.logMsg(4, "Setting %s to %s" % (key, v))
-				mLdapContext = LdapClient.getContext(cls.mLdapConfig, LdapUsage.MOD)
-				mEntry = LdapClient.createMutableEntry()
-				mEntry.setAttr(attr, v)
-				try:
-					mLdapContext.replaceAttributes(dn, mEntry.getAttributes())
-					LdapClient.closeContext(mLdapContext)
-				except:
-					return 1;
+                                if attr == "olcSpSessionlog" and not attrPresent:
+                                    Log.logMsg(4, "olcSpSessionlog attribute is not present and can't replace it")
+                                else:
+				     Log.logMsg(4, "Setting %s to %s" % (key, v))
+				     mLdapContext = LdapClient.getContext(cls.mLdapConfig, LdapUsage.MOD)
+				     mEntry = LdapClient.createMutableEntry()
+				     mEntry.setAttr(attr, v)
+				     try:
+					     mLdapContext.replaceAttributes(dn, mEntry.getAttributes())
+					     LdapClient.closeContext(mLdapContext)
+				     except:
+					     return 1;
 
 	@classmethod
 	def lookupKey(cls, key):
