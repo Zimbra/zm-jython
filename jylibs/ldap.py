@@ -104,8 +104,9 @@ class Ldap:
 			entry = ne.next()
 			entryAttrs = entry.getAttributes()
 			origValue = entryAttrs.getAttrString(attr)
+                        attrPresent = entryAttrs.hasAttribute(attr)
 			LdapClient.closeContext(mLdapContext)
-			if origValue != v:
+			if origValue != v and attrPresent:
 				Log.logMsg(4, "Setting %s to %s" % (key, v))
 				mLdapContext = LdapClient.getContext(cls.mLdapConfig, LdapUsage.MOD)
 				mEntry = LdapClient.createMutableEntry()
