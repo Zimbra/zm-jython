@@ -17,7 +17,7 @@
 
 
 from logmsg import *
-from org.apache.log4j import PropertyConfigurator
+from org.apache.logging.log4j.core.config import Configurator
 import shlex
 import subprocess
 import time
@@ -62,7 +62,7 @@ exe = {
 	}
 
 class Command:
-	PropertyConfigurator.configure("/opt/zimbra/conf/zmconfigd.log4j.properties");
+	Configurator.initialize(None, "/opt/zimbra/conf/zmconfigd.log4j.properties");
 	P = Provisioning.getInstance(Provisioning.CacheMode.OFF)
 
 	@classmethod
