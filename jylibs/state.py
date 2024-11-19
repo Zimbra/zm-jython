@@ -33,6 +33,8 @@ import time
 import traceback
 import ldap
 import os
+import subprocess
+
 
 MAPPEDFILES = {
 	"zimbraSSLDHParam": "conf/dhparam.pem"
@@ -106,8 +108,27 @@ class State:
 
 		self.mtaconfig         = mtaconfig.MtaConfig()
 		self.maxFailedRestarts = 3;
+                self.match_files = [
+                    "/opt/zimbra/mailboxd/webapps/service/WEB-INF/web.xml",
+                    "/opt/zimbra/mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml",
+                    "/opt/zimbra/mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml",
+                    "/opt/zimbra/mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml",
+                    "/opt/zimbra/mailboxd/webapps/zimbra/WEB-INF/web.xml",
+                    "/opt/zimbra/mailboxd/webapps/zimlet/WEB-INF/web.xml"
+                ]
 		if self.localconfig["zmconfigd_max_failed_restarts"] is not None:
 			self.maxFailedRestarts = int(self.localconfig["zmconfigd_max_failed_restarts"])
+
+        def run_zimbra_acl(self, action):
+            try:
+                subprocess.check_call(
+                    ['/opt/zimbra/bin/zmacl', action],
+                    stdout=open(os.devnull, 'w'),
+                    stderr=open(os.devnull, 'w')
+                )
+                Log.logMsg(5, "Successfully ran zmacl %s" % action)
+            except subprocess.CalledProcessError, e:
+                Log.logMsg(1, "Failed to run zmacl %s: %s" % (action, str(e)))
 
 	def isFalseValue(self,val):
 		return (not val or re.match(r"no|false|0+",str(val),re.I))
@@ -802,27 +823,41 @@ class State:
 		to = os.path.join(self.baseDir,to)
 		Log.logMsg(5, "Rewriting %s -> %s (%o)" % (fr, to, mode));
 
-		try:
-			(fh, tmpfile) = tempfile.mkstemp(dir="/tmp")
+                disable_acl = False
 
-			f = fh.asOutputStream()
-			for line in open(fr).readlines():
-				f.write(self.transform(line))
+                if to in self.match_files:
+                    Log.logMsg(5, "File %s matches one of the target files. Disabling zimbra ACL." % to)
+                    self.run_zimbra_acl("disable")
+                    disable_acl = True
 
-			f.close()
-			os.chmod(tmpfile, mode)
-			# Can't find an atomic clobber move in jython
-			if os.path.exists(to):
-				os.unlink(to)
-			shutil.move(tmpfile, to)
-			dt = time.clock() - t1
-			Log.logMsg(3, "Rewrote: %s with mode %o (%.2f sec)" % (to, mode, dt))
-		except Exception, e:
-			[Log.logMsg(1,t) for t in traceback.format_tb(sys.exc_info()[2])]
-			Log.logMsg(1, "Rewrite failed: %s (%s)" % (e))
-			return True
+                try:
+                    (fh, tmpfile) = tempfile.mkstemp(dir="/tmp")
+                    f = fh.asOutputStream()
+                    for line in open(fr).readlines():
+                            f.write(self.transform(line))
 
-		return False
+                    f.close()
+                    os.chmod(tmpfile, mode)
+
+                    # Can't find an atomic clobber move in jython
+                    if os.path.exists(to):
+                        os.unlink(to)
+                    shutil.move(tmpfile, to)
+
+                    dt = time.clock() - t1
+                    Log.logMsg(3, "Rewrote: %s with mode %o (%.2f sec)" % (to, mode, dt))
+
+                except Exception, e:
+                    [Log.logMsg(1, t) for t in traceback.format_tb(sys.exc_info()[2])]
+                    Log.logMsg(1, "Rewrite failed: %s" % e)
+                    return True
+
+                finally:
+                    if disable_acl:
+                        Log.logMsg(5, "Enabling zimbra ACL for %s after rewriting." % fr)
+                        self.run_zimbra_acl("enable")
+
+                return False
 
 	def xformLocalConfig(self, match):
 		sr = match.group(1)
