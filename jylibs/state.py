@@ -120,15 +120,20 @@ class State:
 			self.maxFailedRestarts = int(self.localconfig["zmconfigd_max_failed_restarts"])
 
         def run_zimbra_acl(self, action):
-            try:
-                subprocess.check_call(
-                    ['/opt/zimbra/bin/zmacl', action],
-                    stdout=open(os.devnull, 'w'),
-                    stderr=open(os.devnull, 'w')
-                )
-                Log.logMsg(5, "Successfully ran zmacl %s" % action)
-            except subprocess.CalledProcessError, e:
-                Log.logMsg(1, "Failed to run zmacl %s: %s" % (action, str(e)))
+            zmacl_path = '/opt/zimbra/bin/zmacl'
+
+            if os.path.isfile(zmacl_path):
+                try:
+                    subprocess.check_call(
+                            [zmacl_path, action],
+                            stdout=open(os.devnull, 'w'),
+                            stderr=open(os.devnull, 'w')
+                    )
+                    Log.logMsg(5, "Successfully ran zmacl %s" % action)
+                except subprocess.CalledProcessError, e:
+                    Log.logMsg(1, "Failed to run zmacl %s: %s" % (action, str(e)))
+            else:
+                Log.logMsg(1, "zmacl file not found: %s" % zmacl_path)
 
 	def isFalseValue(self,val):
 		return (not val or re.match(r"no|false|0+",str(val),re.I))
