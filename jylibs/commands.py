@@ -59,6 +59,9 @@ exe = {
 	'CONVERTD'      : "bin/zmconvertctl",
 	'OPENDKIM'	: "bin/zmopendkimctl",
 	'DNSCACHE'	: "bin/zmdnscachectl",
+        'LICENSE-DAEMON': "bin/zmlicensectl",
+        'ONLYOFFICE'    : "bin/zmonlyofficectl",
+        'NALPEIRON-DAEMON' : "bin/zmlicensectl",
 	}
 
 class Command:
@@ -481,6 +484,21 @@ commands = {
 		name = "convertd",
 		cmd  = exe["CONVERTD"] + " %s",
 	),
+        "license-daemon" : Command(
+                desc = "license-daemon",
+                name = "license-daemon",
+                cmd  = exe["LICENSE-DAEMON"] + " %s",
+        ),
+        "onlyoffice" : Command(
+                desc = "onlyoffice",
+                name = "onlyoffice",
+                cmd  = exe["ONLYOFFICE"] + " %s",
+        ),
+        "nalpeiron-daemon" : Command(
+                desc = "nalpeiron-daemon",
+                name = "nalpeiron-daemon",
+                cmd  = exe["NALPEIRON-DAEMON"] + " --nalpeiron %s",
+        ),
 	}
 
 miscCommands = ["garpu","garpb","gamcs","gamau"]
