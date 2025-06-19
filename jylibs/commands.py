@@ -487,7 +487,7 @@ commands = {
         "license-daemon" : Command(
                 desc = "license-daemon",
                 name = "license-daemon",
-                cmd  = exe["LICENSE-DAEMON"] + " %s",
+                cmd  = exe["LICENSE-DAEMON"] + " --service %s",
         ),
         "onlyoffice" : Command(
                 desc = "onlyoffice",
